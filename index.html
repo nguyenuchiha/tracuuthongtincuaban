@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tra cứu thông tin cá nhân</title>
+  <!-- Import phông Blobby Chug -->
+  <link href="https://fonts.cdnfonts.com/css/blobby-chug" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet"/>
+  <style>
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-image: url("https://www.yeudialy.edu.vn/furina-chibi");
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 15px;
+      background-color: #eef3f8;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25); /* giảm opacity để chữ nổi bật */
+      backdrop-filter: blur(4px);
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 980px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    /* --- Chào mừng Blobby + gradient nổi bật --- */
+    .welcome {
+      font-family: 'Blobby Chug', cursive;
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 15px;
+
+      /* Gradient động */
+      background: linear-gradient(90deg, #00f0ff, #0055ff);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s infinite alternate;
+
+      /* Viền chữ nổi bật */
+      -webkit-text-stroke: 1.2px rgba(0,0,0,0.6);
+
+      /* Bóng chữ để tăng độ nổi */
+      text-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    h1 {
+      color: #ffffff;
+      margin-bottom: 18px;
+      font-size: 26px;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .search-container { position: relative; width: 100%; max-width: 420px; margin: 0 auto; }
+
+    input[type="text"] {
+      padding: 12px 15px;
+      font-size: 16px;
+      width: 100%;
+      border: 2px solid rgba(255,255,255,0.9);
+      border-radius: 8px;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.95);
+      color: #111;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      background: #0078d7;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      transition: 0.25s;
+    }
+    button:hover { background: #005a9e; }
+
+    .autocomplete-list {
+      position: absolute;
+      top: 52px;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(0,0,0,0.08);
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+
+    .autocomplete-item {
+      padding: 10px;
+      cursor: pointer;
+      color: #222;
+    }
+    .autocomplete-item:hover { background: #f0f0f0; }
+
+    .result {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      width: 100%;
+    }
+
+    /* --- Card --- */
+    .card {
+      background: rgba(255,255,255,0.98);
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      padding: 18px;
+      width: 260px;
+      transition: transform 0.18s;
+    }
+    .card:hover { transform: translateY(-4px); }
+
+    /* --- Animation từng dòng bay ra chậm --- */
+    @keyframes slideInSlow {
+      0% { opacity: 0; transform: translateY(25px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .card .info {
+      opacity: 0;
+      animation: slideInSlow 0.8s forwards; /* animation chậm hơn */
+    }
+
+    .card .info:nth-child(1) { animation-delay: 0.2s; }
+    .card .info:nth-child(2) { animation-delay: 0.4s; }
+    .card .info:nth-child(3) { animation-delay: 0.6s; }
+    .card .info:nth-child(4) { animation-delay: 0.8s; }
+    .card .info:nth-child(5) { animation-delay: 1s; }
+
+    .info { margin: 8px 0; word-break: break-word; color: #111; }
+
+    a { color: #0078d7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .footer {
+      margin-top: auto;
+      color: #ffffff;
+      text-align: center;
+      font-size: 14px;
+      padding: 10px 0;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    @media (max-width: 500px) {
+      .welcome { font-size: 26px; }
+      h1 { font-size: 20px; }
+      .card { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <div class="app">
+    <div class="welcome">Chào mừng đến với website của NguyênUchiha</div>
+    <h1>Tra cứu thông tin cá nhân</h1>
+
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Nhập họ tên...">
+      <div id="autocomplete" class="autocomplete-list"></div>
+    </div>
+
+    <button onclick="search()">Tìm kiếm</button>
+
+    <div id="result" class="result"></div>
+
+    <div class="footer">💙 Xin cảm ơn đã ghé qua website, nếu có gì thắc mắc hãy liên hệ với NguyênUchiha, xin cảm ơn</div>
+  </div>
+
+  <script>
+    const data = [
+      {"name":"Phạm Thành Nguyên","age":18,"facebook":"https://www.facebook.com/nguynnuchiha?locale=vi_VN","instagram":"https://www.instagram.com/th.nguynn_uchiha07/","phone":"0862889253"},
+      {"name":"Phạm Hoàng Trường Bo","age":18,"facebook":"https://www.facebook.com/truong.bo.838579?locale=vi_VN","instagram":"https://www.instagram.com/truon_gbo/","phone":"0984475041"},
+      {"name":"Nguyễn Thị Thu Hiền","age":18,"facebook":"https://www.facebook.com/thu.hien.165688?locale=vi_VN","instagram":"https://www.instagram.com/__thuuhien_/","phone":"0374450996"},
+      {"name":"Phan Ái Loan","age":18,"facebook":"https://www.facebook.com/ai.loan.541936?locale=vi_VN","instagram":"https://www.instagram.com/laon_.iuui/","phone":"0822744346"},
+      {"name":"Tôn Nguyễn Hoài Linh","age":18,"facebook":"https://www.facebook.com/linh.tonnguyenhoai?locale=vi_VN","instagram":"https://www.instagram.com/_hlynn.07/","phone":"0859212644"},
+      {"name":"Bùi Quốc Nam","age":18,"facebook":"https://www.facebook.com/nam.bui.181567?locale=vi_VN","instagram":"https://www.instagram.com/nambui840/","phone":"0812627679"},
+      {"name":"Nguyễn Quốc Long","age":18,"facebook":"https://www.facebook.com/q.longg115?locale=vi_VN","instagram":"https://www.instagram.com/q.lgnoo_/","phone":"0836684699"},
+      {"name":"Nguyễn Anh Quân","age":18,"facebook":"https://www.facebook.com/nguyen.quan.549212?locale=vi_VN","instagram":"Không biết tự đi mà kiếm","phone":"0358012261"},
+      {"name":"Trần Thị Cẩm Linh","age":18,"facebook":"https://www.facebook.com/cam.linh.870385?locale=vi_VN","instagram":"https://www.instagram.com/clynn._20/","phone":"0813008485"},
+      {"name":"Nguyễn Lưu Thắng","age":18,"facebook":"https://www.facebook.com/duchetconmemay?locale=vi_VN","instagram":"https://www.instagram.com/tuilathang333/","phone":"0398554687"},
+      {"name":"Nguyễn Võ Phương trinh","age":18,"facebook":"https://www.facebook.com/phuongtrinh.nguyenvo.98?locale=vi_VN","instagram":":https://www.instagram.com/phuogtrih_0/","phone":"0816203588"},
+      {"name":"Vũ Lê Hoàng Sơn","age":18,"facebook":"https://www.facebook.com/hoang.son.78334?locale=vi_VN","instagram":"https://www.instagram.com/sonphohanoi/","phone":"0793692252"},
+      {"name":"Nguyễn Trần Đinh Dương","age":18,"facebook":"https://www.facebook.com/NTDD2007?locale=vi_VN","instagram":"https://www.instagram.com/nguyen.duongcme/","phone":"0336076007"},
+      {"name":"Lê Thị Vân Anh","age":18,"facebook":"https://www.facebook.com/anh.lee.908851?locale=vi_VN","instagram":"https://www.instagram.com/vanhhh0707/","phone":"0866983063"},
+      {"name":"Lý Hoàng Nhật","age":18,"facebook":"https://www.facebook.com/nhat.04102007?locale=vi_VN","instagram":"https://www.instagram.com/ky.ly.12139862/","phone":"chiuuuuuu"},
+      {"name":"Cao Phan Thiên Phúc","age":18,"facebook":"https://www.facebook.com/anh.mia.7509?locale=vi_VN","instagram":"chịu","phone":"chịu x2"},
+      {"name":"Đậu Thị Khánh Ly","age":18,"facebook":"https://www.facebook.com/tkhanhly.281194?locale=vi_VN","instagram":"https://www.instagram.com/khanhdauthi/","phone":"kbiet"}
+    ];
+
+    const input = document.getElementById('searchInput');
+    const autocompleteDiv = document.getElementById('autocomplete');
+    const resultDiv = document.getElementById('result');
+
+    input.addEventListener('input', () => {
+      const val = input.value.trim().toLowerCase();
+      autocompleteDiv.innerHTML = '';
+      if(!val) return;
+
+      const suggestions = data.filter(p => p.name.toLowerCase().includes(val));
+      suggestions.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = p.name;
+        item.addEventListener('click', () => {
+          input.value = p.name;
+          autocompleteDiv.innerHTML = '';
+          search();
+        });
+        autocompleteDiv.appendChild(item);
+      });
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') {
+        autocompleteDiv.innerHTML = '';
+        search();
+      }
+    });
+
+    function search() {
+      const val = input.value.trim().toLowerCase();
+      resultDiv.innerHTML = '';
+      if(!val) return;
+
+      const results = data.filter(p => p.name.toLowerCase().includes(val));
+      if(results.length > 0) {
+        results.forEach(person => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="info"><strong>👤 Họ tên:</strong> ${person.name}</div>
+            <div class="info"><strong>🎂 Tuổi:</strong> ${person.age}</div>
+            <div class="info"><strong>📘 Facebook:</strong> <a href="${person.facebook}" target="_blank" rel="noopener noreferrer">${person.facebook}</a></div>
+            <div class="info"><strong>📸 Instagram:</strong> <a href="${person.instagram}" target="_blank" rel="noopener noreferrer">${person.instagram}</a></div>
+            <div class="info"><strong>📞 SĐT:</strong> ${person.phone}</div>
+          `;
+          resultDiv.appendChild(card);
+        });
+      } else {
+        resultDiv.innerHTML = `<div class="card"><div class="info">Không tìm thấy thông tin!</div></div>`;
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!document.querySelector('.search-container').contains(e.target)) {
+        autocompleteDiv.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
+
